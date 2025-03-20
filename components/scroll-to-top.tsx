@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { ArrowUp } from "lucide-react"
+import { isCurrentlyNavigating } from "@/utils/navigation-service"
 
 export default function ScrollToTop() {
   const [isVisible, setIsVisible] = useState(false)
@@ -22,26 +23,14 @@ export default function ScrollToTop() {
   }, [])
 
   const scrollToTop = () => {
-    // Find the hero element
-    const heroElement = document.getElementById("hero")
-
-    if (heroElement) {
-      // Update URL without page reload
-      window.history.pushState(null, "", "#hero")
-
-      // Scroll to hero section
-      heroElement.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      })
-
-      // Dispatch a custom event to notify the app about section change
-      window.dispatchEvent(
-        new CustomEvent("sectionChange", {
-          detail: { sectionId: "hero" },
-        }),
-      )
-    }
+    // Check if we're already navigating to prevent conflicts
+    if (isCurrentlyNavigating()) return;
+    
+    // Just scroll to top without changing the URL
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    })
   }
 
   return (
@@ -67,4 +56,3 @@ export default function ScrollToTop() {
     </AnimatePresence>
   )
 }
-

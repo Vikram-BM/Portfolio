@@ -6,14 +6,14 @@ import { useTheme } from "next-themes"
 import { Menu, X, Moon, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useMobile } from "@/hooks/use-mobile"
+import { navigateToSection } from "@/utils/navigation-service"
 
 interface NavigationProps {
   sections: { id: string; label: string }[]
   activeSection: string
-  onSectionChange: (sectionId: string) => void
 }
 
-export default function Navigation({ sections, activeSection, onSectionChange }: NavigationProps) {
+export default function Navigation({ sections, activeSection }: NavigationProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const { theme, setTheme } = useTheme()
@@ -28,25 +28,11 @@ export default function Navigation({ sections, activeSection, onSectionChange }:
   }
 
   const handleSectionClick = (sectionId: string) => {
-    // Find the element by ID
-    const element = document.getElementById(sectionId)
+    // Use the navigation service to navigate to the section
+    navigateToSection(sectionId)
 
-    if (element) {
-      // Update URL without page reload
-      window.history.pushState(null, "", `#${sectionId}`)
-
-      // Update active section
-      onSectionChange(sectionId)
-
-      // Close mobile menu if open
-      if (isMobile) setIsOpen(false)
-
-      // Smooth scroll to element
-      element.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      })
-    }
+    // Close mobile menu if open
+    if (isMobile) setIsOpen(false)
   }
 
   // Animation variants
@@ -98,7 +84,23 @@ export default function Navigation({ sections, activeSection, onSectionChange }:
         >
           <span
             className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-500 cursor-pointer"
-            onClick={() => handleSectionClick("hero")}
+            onClick={() => {
+              // Instead of navigating, simply scroll to top
+              window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+              });
+              
+              // Only update active section without changing URL
+              if (activeSection !== "hero") {
+                setTimeout(() => {
+                  if (window.scrollY < 100) {
+                    setIsOpen(false); // Close mobile menu if open
+                    navigateToSection("hero");
+                  }
+                }, 500);
+              }
+            }}
           >
             Vikram BM
           </span>

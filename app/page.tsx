@@ -16,6 +16,7 @@ import ScrollToTop from "@/components/scroll-to-top"
 import PageLoader from "@/components/page-loader"
 import { useMobile } from "@/hooks/use-mobile"
 import Footer from "@/components/footer"
+import { initNavigationService, registerUpdateCallback, getActiveSection } from "@/utils/navigation-service"
 
 // Define the sections for navigation
 const sections = [
@@ -29,13 +30,14 @@ const sections = [
 ]
 
 export default function Home() {
-  const [activeSection, setActiveSection] = useState("hero")
+  const [activeSection, setActiveSection] = useState(getActiveSection())
   const [direction, setDirection] = useState(0)
   const sectionRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
   const isMobile = useMobile()
-  const scrollingRef = useRef(false)
+  const observerRef = useRef<IntersectionObserver | null>(null)
+  const isScrollingRef = useRef(false)
 
-  // Handle section change for desktop and mobile view
+  // Update active section and direction
   const handleSectionChange = (sectionId: string) => {
     const currentIndex = sections.findIndex((s) => s.id === activeSection)
     const newIndex = sections.findIndex((s) => s.id === sectionId)
@@ -44,64 +46,85 @@ export default function Home() {
     setDirection(newIndex > currentIndex ? 1 : -1)
   }
 
-  // Handle hash change for direct links
+  // Initialize navigation service
   useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.replace("#", "")
-      if (hash && sections.some((s) => s.id === hash)) {
-        handleSectionChange(hash)
-      }
-    }
+    // Register the update callback
+    registerUpdateCallback(handleSectionChange)
 
-    // Check hash on initial load
-    handleHashChange()
+    // Initialize the navigation service
+    const cleanup = initNavigationService()
 
-    // Listen for hash changes
-    window.addEventListener("hashchange", handleHashChange)
-
-    // Listen for custom section change events
-    const handleSectionChangeEvent = (e: CustomEvent) => {
-      handleSectionChange(e.detail.sectionId)
-    }
-
-    window.addEventListener("sectionChange", handleSectionChangeEvent as EventListener)
-
-    return () => {
-      window.removeEventListener("hashchange", handleHashChange)
-      window.removeEventListener("sectionChange", handleSectionChangeEvent as EventListener)
-    }
+    return cleanup
   }, [])
 
   // Set up intersection observer for scrolling detection
   useEffect(() => {
-    const observer = new IntersectionObserver(
+    // Disconnect previous observer if exists
+    if (observerRef.current) {
+      observerRef.current.disconnect()
+    }
+    
+    // Variable to track if a URL update is allowed
+    let allowUrlUpdate = true;
+    
+    // Create a new observer with a lower threshold to improve detection
+    observerRef.current = new IntersectionObserver(
       (entries) => {
-        // Skip if we're programmatically scrolling
-        if (scrollingRef.current) return
+        // Ignore if we're in the middle of a programmatic scroll
+        if (isScrollingRef.current) return;
+        
+        // Ignore observer updates during page load when a hash is present
+        if (window.location.hash && !allowUrlUpdate) return;
 
+        // Find the most visible section
+        let bestEntry = null;
+        let maxRatio = 0;
+        
         entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-            const sectionId = entry.target.id
-            if (activeSection !== sectionId) {
-              setActiveSection(sectionId)
-              // Update URL without causing a page reload
-              window.history.replaceState(null, "", `#${sectionId}`)
+          // Get the highest intersection ratio
+          if (entry.isIntersecting && entry.intersectionRatio > maxRatio) {
+            maxRatio = entry.intersectionRatio;
+            bestEntry = entry;
+          }
+        });
+        
+        // Only update if we found a visible section with significant visibility
+        if (bestEntry && maxRatio >= 0.3) {
+          const sectionId = bestEntry.target.id;
+          
+          // Only update if this is a different section
+          if (activeSection !== sectionId) {
+            setActiveSection(sectionId);
+            
+            // Only silently update URL if this is from natural scrolling
+            // and not immediately after page load with a hash URL
+            if (allowUrlUpdate && window.location.hash !== `#${sectionId}`) {
+              // Use replaceState to avoid creating history entries
+              window.history.replaceState(null, "", `#${sectionId}`);
             }
           }
-        })
+        }
       },
-      { threshold: 0.5 },
-    )
+      { threshold: [0.1, 0.3, 0.5, 0.7, 0.9] }, // Multiple thresholds for better detection
+    );
 
+    // If there's a hash in the URL at initial load, disable URL updates temporarily
+    if (window.location.hash) {
+      allowUrlUpdate = false;
+      // Re-enable URL updates after initial navigation is complete
+      setTimeout(() => {
+        allowUrlUpdate = true;
+      }, 2000);
+    }
+
+    // Observe all section elements
     Object.values(sectionRefs.current).forEach((ref) => {
-      if (ref) observer.observe(ref)
-    })
+      if (ref) observerRef.current?.observe(ref);
+    });
 
     return () => {
-      Object.values(sectionRefs.current).forEach((ref) => {
-        if (ref) observer.unobserve(ref)
-      })
-    }
+      observerRef.current?.disconnect();
+    };
   }, [activeSection])
 
   // Animation variants for page transitions
@@ -137,7 +160,7 @@ export default function Home() {
         <ScrollToTop />
 
         {/* Navigation */}
-        <Navigation sections={sections} activeSection={activeSection} onSectionChange={handleSectionChange} />
+        <Navigation sections={sections} activeSection={activeSection} />
 
         {/* Desktop view with animated transitions */}
         {!isMobile && (
@@ -155,7 +178,7 @@ export default function Home() {
                       initial="initial"
                       animate="animate"
                       exit="exit"
-                      className="absolute inset-0 pt-16 overflow-y-auto"
+                      className="absolute inset-0 pt-16 overflow-y-auto no-scrollbar"
                     >
                       <Component />
                       {id === "contact" && <Footer />}

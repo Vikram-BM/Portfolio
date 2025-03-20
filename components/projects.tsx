@@ -143,18 +143,14 @@ export default function Projects() {
                           className="text-muted-foreground hover:text-primary transition-colors"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          {project.link.includes("github") ? (
-                            <Github className="h-5 w-5" />
-                          ) : (
-                            <ExternalLink className="h-5 w-5" />
-                          )}
+                          <Github className="h-5 w-5" />
                           <span className="sr-only">Project Link</span>
                         </a>
                       )}
                     </CardTitle>
                     <CardDescription>
                       {project.achievement && (
-                        <Badge className="mb-2 bg-primary/10 hover:bg-primary/20 transition-colors">
+                        <Badge className="mb-2 bg-primary/20 text-primary-foreground dark:bg-primary/30 dark:text-primary hover:bg-primary/30 dark:hover:bg-primary/40 transition-colors font-medium">
                           {project.achievement}
                         </Badge>
                       )}
@@ -227,7 +223,7 @@ export default function Projects() {
                       </CardTitle>
                       <CardDescription>
                         {projects[selectedProject].achievement && (
-                          <Badge className="mr-2 bg-primary/10">{projects[selectedProject].achievement}</Badge>
+                          <Badge className="mr-2 bg-primary/20 text-primary-foreground dark:bg-primary/30 dark:text-primary font-medium">{projects[selectedProject].achievement}</Badge>
                         )}
                         <span className="text-sm text-muted-foreground">{projects[selectedProject].period}</span>
                       </CardDescription>
@@ -262,11 +258,7 @@ export default function Projects() {
                             className="flex items-center"
                           >
                             Visit Project{" "}
-                            {projects[selectedProject].link.includes("github") ? (
-                              <Github className="ml-2 h-4 w-4" />
-                            ) : (
-                              <ExternalLink className="ml-2 h-4 w-4" />
-                            )}
+                            <Github className="ml-2 h-4 w-4" />
                           </a>
                         </Button>
                       )}

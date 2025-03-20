@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Github, Linkedin, Mail } from "lucide-react"
 import TypewriterComponent from "typewriter-effect"
+import { navigateToSection } from "@/utils/navigation-service"
 
 export default function Hero() {
   const [mounted, setMounted] = useState(false)
@@ -14,27 +15,9 @@ export default function Hero() {
   }, [])
 
   // Function to handle smooth scrolling to sections
-  const scrollToSection = (sectionId: string) => {
-    // Find the element by ID
-    const element = document.getElementById(sectionId)
-
-    if (element) {
-      // Update URL without page reload
-      window.history.pushState(null, "", `#${sectionId}`)
-
-      // Directly scroll to the element with smooth behavior
-      element.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      })
-
-      // For mobile view, we need to ensure the section is properly highlighted in navigation
-      window.dispatchEvent(
-        new CustomEvent("sectionChange", {
-          detail: { sectionId },
-        }),
-      )
-    }
+  const handleNavigation = (sectionId: string) => {
+    // Use the navigation service to navigate to the section
+    navigateToSection(sectionId)
   }
 
   // Animation variants
@@ -125,7 +108,7 @@ export default function Hero() {
         >
           <motion.div variants={itemVariants} className="space-y-2">
             <h2 className="text-lg md:text-xl font-medium text-primary">Hello, I'm</h2>
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-500 to-primary">
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight md:leading-snug bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-500 to-primary pb-1">
               Vikram Bangalore Manjunath
             </h1>
           </motion.div>
@@ -152,7 +135,7 @@ export default function Hero() {
           </motion.div>
 
           <motion.div variants={itemVariants} className="flex flex-wrap justify-center gap-4 pt-6">
-            <Button size="lg" className="group relative overflow-hidden" onClick={() => scrollToSection("contact")}>
+            <Button size="lg" className="group relative overflow-hidden" onClick={() => handleNavigation("contact")}>
               <span className="relative z-10 flex items-center">
                 Contact Me
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -164,7 +147,7 @@ export default function Hero() {
               variant="outline"
               size="lg"
               className="group relative overflow-hidden"
-              onClick={() => scrollToSection("experience")}
+              onClick={() => handleNavigation("experience")}
             >
               <span className="relative z-10">View Experience</span>
               <span className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
@@ -218,7 +201,7 @@ export default function Hero() {
               animate={{ y: [0, 10, 0] }}
               transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
               className="text-muted-foreground cursor-pointer"
-              onClick={() => scrollToSection("about")}
+              onClick={() => handleNavigation("about")}
             >
               <ArrowRight className="h-6 w-6 rotate-90" />
             </motion.div>

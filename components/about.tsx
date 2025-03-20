@@ -138,7 +138,7 @@ export default function About() {
                 className="relative w-64 h-64 rounded-full overflow-hidden border-4 border-primary/20"
               >
                 <Image
-                  src="/images/vikram-profile.png"
+                  src="/images/vikram-profile.jpeg"
                   alt="Vikram Bangalore Manjunath"
                   fill
                   className="object-cover"
