@@ -1,0 +1,11 @@
+// This is just an example of how to use the AI-themed favicon
+// To use it, replace the <head> section in layout.tsx with this:
+
+<head>
+  {/* Dynamic AI-themed favicon */}
+  <AiFavicon />
+</head>
+
+// And add this import at the top:
+// import AiFavicon from '@/components/ai-favicon';
+
